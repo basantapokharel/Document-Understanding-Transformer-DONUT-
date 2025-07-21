@@ -1,0 +1,230 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+  <title>Invoice Parser</title>
+</head>
+<body>
+  <h2>Upload Invoice Image</h2>
+  <form action="/upload/" enctype="multipart/form-data" method="post">
+    <input name="file" type="file" accept="image/*">
+    <input type="submit" value="Upload">
+  </form>
+
+  {% if result %}
+    <h3>Extracted JSON:</h3>
+    <pre>{{ result }}</pre>
+  {% endif %}
+</body>
+</html> -->
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice to JSON Converter</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <h1>Invoice Converter</h1>
+            </div>
+            <p class="subtitle">Transform your invoices into structured JSON data with AI precision</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="upload-section">
+                <div class="upload-card">
+                    <h2><i class="fas fa-cloud-upload-alt"></i> Upload Invoice</h2>
+                    
+                    {% if result %}
+                    <div class="success-message">
+                        <i class="fas fa-check-circle"></i>
+                        Invoice processed successfully!
+                    </div>
+                    {% endif %}
+
+                    <form action="/upload/" method="post" enctype="multipart/form-data" class="upload-form">
+                        <div class="file-input-container">
+                            <input type="file" id="file" name="file" accept="image/*,.pdf" required class="file-input">
+                            <label for="file" class="file-label">
+                                <i class="fas fa-plus"></i>
+                                <span class="file-text">Choose invoice file or drag & drop</span>
+                                <small>Supports PNG, JPG, JPEG, PDF</small>
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="convert-btn">
+                            <i class="fas fa-magic"></i>
+                            Convert to JSON
+                        </button>
+                    </form>
+
+                    <!-- Features -->
+                    <div class="features">
+                        <div class="feature">
+                            <i class="fas fa-robot"></i>
+                            <span>AI-Powered OCR</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-code"></i>
+                            <span>Structured JSON Output</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Secure Processing</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            {% if result %}
+            <div class="results-section">
+                <div class="results-card">
+                    <div class="results-header">
+                        <h3><i class="fas fa-file-code"></i> Extracted JSON Data</h3>
+                        <button onclick="copyToClipboard()" class="copy-btn">
+                            <i class="fas fa-copy"></i>
+                            Copy JSON
+                        </button>
+                    </div>
+                    
+                    <div class="json-container">
+                        <pre id="json-output"><code>{{ result | tojson(indent=2) }}</code></pre>
+                    </div>
+                    
+                    <div class="download-options">
+                        <button onclick="downloadJSON()" class="download-btn">
+                            <i class="fas fa-download"></i>
+                            Download JSON
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- How It Works -->
+            <div class="info-section">
+                <h3><i class="fas fa-info-circle"></i> How It Works</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Upload Invoice</h4>
+                            <p>Select your invoice image or PDF file</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>AI Processing</h4>
+                            <p>Our Donut model extracts and structures the data</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Get JSON</h4>
+                            <p>Receive clean, structured JSON output</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Invoice Converter. Powered by AI technology.</p>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="loader"></div>
+            <h3>Processing Invoice...</h3>
+            <p>Please wait while we extract your data</p>
+        </div>
+    </div>
+
+    <script>
+        // File input handling
+        const fileInput = document.getElementById('file');
+        const fileLabel = document.querySelector('.file-label');
+        const fileText = document.querySelector('.file-text');
+
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                fileText.innerHTML = `<i class="fas fa-file"></i> ${e.target.files[0].name}`;
+                fileLabel.classList.add('file-selected');
+            }
+        });
+
+        // Drag and drop
+        fileLabel.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        });
+
+        fileLabel.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+        });
+
+        fileLabel.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                fileText.innerHTML = `<i class="fas fa-file"></i> ${files[0].name}`;
+                this.classList.add('file-selected');
+            }
+        });
+
+        // Form submission
+        document.querySelector('.upload-form').addEventListener('submit', function() {
+            document.getElementById('loading').style.display = 'flex';
+        });
+
+        // Copy to clipboard
+        function copyToClipboard() {
+            const jsonOutput = document.getElementById('json-output').textContent;
+            navigator.clipboard.writeText(jsonOutput).then(function() {
+                const copyBtn = document.querySelector('.copy-btn');
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                copyBtn.classList.add('copied');
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Download JSON
+        function downloadJSON() {
+            const jsonOutput = document.getElementById('json-output').textContent;
+            const blob = new Blob([jsonOutput], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'invoice_data.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
